@@ -29,7 +29,7 @@ function cabecera() {
 }
 
 function tarjeta(p) {
-  return '<article class="card"><small>' + p.categoria + '</small>' +
+  return '<article class="card"><a href="producto.html?id=' + p.id + '"><img class="thumb" src="' + p.imagen + '" alt="' + p.nombre + '" loading="lazy"></a><small>' + p.categoria + '</small>' +
     '<h3><a href="producto.html?id=' + p.id + '">' + p.nombre + '</a></h3>' +
     '<span>' + p.descripcion + '</span><span class="precio">' + eur(p.precio) + '</span></article>';
 }

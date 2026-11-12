@@ -5,7 +5,8 @@
   "categoria": "Procesador",
   "descripcion": "8 nucleos, 16 hilos, 4.5-5.4 GHz. Socket AM5.",
   "precio": 299.9,
-  "stock": 14
+  "stock": 14,
+  "imagen": "img/1.svg"
  },
  {
   "id": 2,
@@ -13,7 +14,8 @@
   "categoria": "Procesador",
   "descripcion": "14 nucleos (6P+8E), hasta 5.3 GHz. Socket LGA1700.",
   "precio": 319.0,
-  "stock": 9
+  "stock": 9,
+  "imagen": "img/2.svg"
  },
  {
   "id": 3,
@@ -21,7 +23,8 @@
   "categoria": "Tarjeta grafica",
   "descripcion": "12 GB GDDR6X, DLSS 3, ideal para 1440p.",
   "precio": 619.0,
-  "stock": 6
+  "stock": 6,
+  "imagen": "img/3.svg"
  },
  {
   "id": 4,
@@ -29,7 +32,8 @@
   "categoria": "Tarjeta grafica",
   "descripcion": "16 GB GDDR6, FSR 3, gran relacion precio/rendimiento.",
   "precio": 489.5,
-  "stock": 8
+  "stock": 8,
+  "imagen": "img/4.svg"
  },
  {
   "id": 5,
@@ -37,7 +41,8 @@
   "categoria": "Memoria RAM",
   "descripcion": "Kit 2x16 GB, CL36, perfil EXPO/XMP.",
   "precio": 124.95,
-  "stock": 25
+  "stock": 25,
+  "imagen": "img/5.svg"
  },
  {
   "id": 6,
@@ -45,7 +50,8 @@
   "categoria": "Memoria RAM",
   "descripcion": "Kit 2x8 GB, CL16, compatible AM4/LGA1200.",
   "precio": 49.9,
-  "stock": 40
+  "stock": 40,
+  "imagen": "img/6.svg"
  },
  {
   "id": 7,
@@ -53,7 +59,8 @@
   "categoria": "Almacenamiento",
   "descripcion": "NVMe PCIe 4.0, lectura 7450 MB/s.",
   "precio": 109.0,
-  "stock": 18
+  "stock": 18,
+  "imagen": "img/7.svg"
  },
  {
   "id": 8,
@@ -61,7 +68,8 @@
   "categoria": "Almacenamiento",
   "descripcion": "NVMe PCIe 4.0, buena opcion economica.",
   "precio": 44.99,
-  "stock": 30
+  "stock": 30,
+  "imagen": "img/8.svg"
  },
  {
   "id": 9,
@@ -69,7 +77,8 @@
   "categoria": "Placa base",
   "descripcion": "AM5, DDR5, PCIe 5.0, WiFi 6.",
   "precio": 189.0,
-  "stock": 11
+  "stock": 11,
+  "imagen": "img/9.svg"
  },
  {
   "id": 10,
@@ -77,7 +86,8 @@
   "categoria": "Placa base",
   "descripcion": "LGA1700, DDR5, 2x M.2, WiFi 6E.",
   "precio": 179.0,
-  "stock": 7
+  "stock": 7,
+  "imagen": "img/10.svg"
  },
  {
   "id": 11,
@@ -85,7 +95,8 @@
   "categoria": "Fuente",
   "descripcion": "80 Plus Gold, modular, ATX 3.0.",
   "precio": 99.9,
-  "stock": 20
+  "stock": 20,
+  "imagen": "img/11.svg"
  },
  {
   "id": 12,
@@ -93,6 +104,7 @@
   "categoria": "Caja",
   "descripcion": "Semitorre ATX con excelente flujo de aire.",
   "precio": 94.9,
-  "stock": 12
+  "stock": 12,
+  "imagen": "img/12.svg"
  }
 ]

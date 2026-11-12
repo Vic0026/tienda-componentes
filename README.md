@@ -45,3 +45,14 @@ compra con direccion y telefono, listado y detalle de pedidos y panel de adminis
 - Documenta cada hallazgo con peticion, respuesta, efecto e impacto.
 - Propon una correccion y una prueba de cierre por hallazgo.
 - No ataques nada fuera del alcance indicado.
+
+## Version estatica para GitHub Pages (`docs/`)
+
+La carpeta `docs/` contiene una version **solo HTML/CSS/JS** de la tienda, pensada para
+publicarse en GitHub Pages (`https://vic0026.github.io/tienda-componentes/`).
+No tiene servidor ni base de datos, asi que los fallos son de **cliente**:
+XSS en el DOM, autenticacion y control de acceso en el navegador, ficheros de datos
+publicos y archivos olvidados. Todo el contenido es ficticio.
+
+Para activarla: **Settings → Pages → Deploy from a branch → `main` / `/docs`**.
+Para probarla en local: `cd docs && python -m http.server 8000` y abrir <http://127.0.0.1:8000>.

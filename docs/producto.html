@@ -32,8 +32,9 @@ fetch("data/productos.json").then(function (r) { return r.json(); }).then(functi
   var p = todos.filter(function (x) { return x.id === id; })[0];
   if (!p) { document.getElementById("ficha").innerHTML = "<p>Producto no encontrado.</p>"; return; }
   document.title = p.nombre + " · PCForge";
-  document.getElementById("ficha").innerHTML = '<h1>' + p.nombre + '</h1><p><small>' + p.categoria + '</small></p><p>' + p.descripcion +
-    '</p><p class="precio">' + eur(p.precio) + ' · ' + p.stock + ' en stock</p>' +
+  document.getElementById("ficha").innerHTML = '<div class="ficha"><img class="thumb" src="' + p.imagen + '" alt="' + p.nombre + '">' +
+    '<div><h1>' + p.nombre + '</h1><p><small>' + p.categoria + '</small></p><p>' + p.descripcion +
+    '</p><p class="precio">' + eur(p.precio) + ' · ' + p.stock + ' en stock</p></div></div>' +
     '<div class="panel"><h2>Comprar</h2>' + (sesion()
       ? '<form id="formCompra"><label for="cantidad">Cantidad</label><input id="cantidad" type="number" value="1" min="1">' +
         '<label for="direccion">Direccion de envio</label><input id="direccion" required>' +
