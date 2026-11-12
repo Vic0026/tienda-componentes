@@ -1,0 +1,35 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Catalogo · PCForge</title>
+<link rel="stylesheet" href="style.css">
+<script src="js/app.js"></script>
+</head>
+<body>
+<div id="cab"></div>
+<main>
+<h1 id="titulo">Todos los componentes</h1>
+<div class="cats" id="cats"></div>
+<div class="grid" id="lista"></div>
+<script>
+fetch("data/productos.json").then(function (r) { return r.json(); }).then(function (todos) {
+  var q = param("q"), cat = param("cat");
+  var cats = []; todos.forEach(function (p) { if (cats.indexOf(p.categoria) < 0) cats.push(p.categoria); });
+  document.getElementById("cats").innerHTML = '<a href="index.html" class="' + (!cat ? 'on' : '') + '">Todo</a>' +
+    cats.map(function (c) { return '<a href="index.html?cat=' + encodeURIComponent(c) + '" class="' + (c === cat ? 'on' : '') + '">' + c + '</a>'; }).join("");
+  var lista = todos;
+  if (cat) lista = lista.filter(function (p) { return p.categoria === cat; });
+  if (q) {
+    lista = lista.filter(function (p) { return p.nombre.toLowerCase().indexOf(q.toLowerCase()) >= 0; });
+    // VULN: el termino buscado se inserta como HTML
+    document.getElementById("titulo").innerHTML = "Resultados para: " + q;
+  } else if (cat) { document.getElementById("titulo").textContent = cat; }
+  document.getElementById("lista").innerHTML = lista.length ? lista.map(tarjeta).join("") : "<p>No hay componentes que coincidan.</p>";
+});
+</script>
+</main>
+<footer>PCForge · Maqueta estatica de practicas de auditoria web.</footer>
+</body>
+</html>

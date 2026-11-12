@@ -1,0 +1,69 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Producto · PCForge</title>
+<link rel="stylesheet" href="style.css">
+<script src="js/app.js"></script>
+</head>
+<body>
+<div id="cab"></div>
+<main>
+<p><a href="index.html">← Volver al catalogo</a></p>
+<div id="ficha"></div>
+<h2>Opiniones</h2>
+<div id="resenas"></div>
+<form id="formRes" class="panel" style="display:none">
+  <label for="texto">Tu opinion</label>
+  <textarea id="texto" rows="3" required></textarea>
+  <p><button type="submit">Publicar opinion</button></p>
+</form>
+<script>
+var id = parseInt(param("id"), 10), clave = "resenas_" + id;
+function pintarResenas() {
+  var lista = JSON.parse(localStorage.getItem(clave) || "[]");
+  document.getElementById("resenas").innerHTML = lista.length ? lista.map(function (r) {
+    // VULN: el texto de la opinion se inserta como HTML
+    return '<div class="resena"><small>' + r.autor + '</small><div>' + r.texto + '</div></div>';
+  }).join("") : "<p>Todavia no hay opiniones. Se el primero.</p>";
+}
+fetch("data/productos.json").then(function (r) { return r.json(); }).then(function (todos) {
+  var p = todos.filter(function (x) { return x.id === id; })[0];
+  if (!p) { document.getElementById("ficha").innerHTML = "<p>Producto no encontrado.</p>"; return; }
+  document.title = p.nombre + " · PCForge";
+  document.getElementById("ficha").innerHTML = '<h1>' + p.nombre + '</h1><p><small>' + p.categoria + '</small></p><p>' + p.descripcion +
+    '</p><p class="precio">' + eur(p.precio) + ' · ' + p.stock + ' en stock</p>' +
+    '<div class="panel"><h2>Comprar</h2>' + (sesion()
+      ? '<form id="formCompra"><label for="cantidad">Cantidad</label><input id="cantidad" type="number" value="1" min="1">' +
+        '<label for="direccion">Direccion de envio</label><input id="direccion" required>' +
+        '<label for="telefono">Telefono</label><input id="telefono" required><p><button type="submit">Confirmar pedido</button></p></form>'
+      : '<p><a href="login.html">Entra</a> para comprar este componente.</p>') + '</div>';
+  var fc = document.getElementById("formCompra");
+  if (fc) fc.onsubmit = function (e) {
+    e.preventDefault();
+    var s = sesion(), ped = JSON.parse(localStorage.getItem("pedidos_locales") || "[]");
+    var nuevo = { id: 1000 + ped.length + 1, usuario: s.usuario, email: s.usuario + "@pcforge.test", producto: p.nombre,
+      cantidad: parseInt(document.getElementById("cantidad").value, 10) || 1,
+      direccion: document.getElementById("direccion").value, telefono: document.getElementById("telefono").value };
+    nuevo.total = Math.round(p.precio * nuevo.cantidad * 100) / 100;
+    ped.push(nuevo); localStorage.setItem("pedidos_locales", JSON.stringify(ped));
+    location.href = "pedido.html?id=" + nuevo.id;
+  };
+});
+pintarResenas();
+if (sesion()) {
+  var f = document.getElementById("formRes"); f.style.display = "block";
+  f.onsubmit = function (e) {
+    e.preventDefault();
+    var lista = JSON.parse(localStorage.getItem(clave) || "[]");
+    lista.unshift({ autor: sesion().usuario, texto: document.getElementById("texto").value });
+    localStorage.setItem(clave, JSON.stringify(lista));
+    document.getElementById("texto").value = ""; pintarResenas();
+  };
+}
+</script>
+</main>
+<footer>PCForge · Maqueta estatica de practicas de auditoria web.</footer>
+</body>
+</html>
