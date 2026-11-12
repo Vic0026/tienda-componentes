@@ -1,0 +1,15 @@
+{% extends "base.html" %}
+{% block titulo %}Crear cuenta{% endblock %}
+{% block contenido %}
+<h1>Crear cuenta</h1>
+<form method="post" class="panel">
+  {% if error %}<p class="err">{{ error }}</p>{% endif %}
+  <label for="username">Usuario</label>
+  <input id="username" name="username" required>
+  <label for="email">Correo</label>
+  <input id="email" type="email" name="email">
+  <label for="password">Contrasena</label>
+  <input id="password" type="password" name="password" autocomplete="new-password" required>
+  <p><button type="submit">Crear cuenta</button></p>
+</form>
+{% endblock %}

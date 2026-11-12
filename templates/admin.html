@@ -1,0 +1,15 @@
+{% extends "base.html" %}
+{% block titulo %}Administracion{% endblock %}
+{% block contenido %}
+<h1>Administracion</h1>
+<h2>Usuarios</h2>
+<div class="tabla"><table>
+  <tr><th>ID</th><th>Usuario</th><th>Correo</th><th>Rol</th></tr>
+  {% for u in usuarios %}<tr><td>{{ u['id'] }}</td><td>{{ u['username'] }}</td><td>{{ u['email'] }}</td><td>{{ u['rol'] }}</td></tr>{% endfor %}
+</table></div>
+<h2>Ventas</h2>
+<div class="tabla"><table>
+  <tr><th>Pedido</th><th>Cliente</th><th>Componente</th><th>Cant.</th><th>Total</th></tr>
+  {% for v in ventas %}<tr><td>#{{ v['id'] }}</td><td>{{ v['username'] }}</td><td>{{ v['nombre'] }}</td><td>{{ v['cantidad'] }}</td><td>{{ '%.2f'|format(v['total']) }} €</td></tr>{% endfor %}
+</table></div>
+{% endblock %}

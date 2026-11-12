@@ -1,0 +1,20 @@
+{% extends "base.html" %}
+{% block titulo %}Busqueda{% endblock %}
+{% block contenido %}
+<h1>Resultados para: {{ q|safe }}</h1>
+{% if error %}<p class="err">Error en la busqueda: {{ error }}</p>{% endif %}
+{% if filas %}
+<div class="grid">
+{% for p in filas %}
+  <article class="card">
+    <small>{{ p['categoria'] }}</small>
+    <h3><a href="/producto/{{ p['id'] }}">{{ p['nombre'] }}</a></h3>
+    <span>{{ p['descripcion'] }}</span>
+    <span class="precio">{{ '%.2f'|format(p['precio']) }} €</span>
+  </article>
+{% endfor %}
+</div>
+{% elif not error %}
+<p>No hay componentes que coincidan. Prueba con otra marca o modelo.</p>
+{% endif %}
+{% endblock %}

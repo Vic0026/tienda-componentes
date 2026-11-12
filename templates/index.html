@@ -1,0 +1,18 @@
+{% extends "base.html" %}
+{% block contenido %}
+<h1>{{ cat or "Todos los componentes" }}</h1>
+<div class="cats">
+  <a href="/" class="{{ 'on' if not cat }}">Todo</a>
+  {% for c in cats %}<a href="/?cat={{ c|urlencode }}" class="{{ 'on' if c == cat }}">{{ c }}</a>{% endfor %}
+</div>
+<div class="grid">
+{% for p in productos %}
+  <article class="card">
+    <small>{{ p['categoria'] }}</small>
+    <h3><a href="/producto/{{ p['id'] }}">{{ p['nombre'] }}</a></h3>
+    <span>{{ p['descripcion'] }}</span>
+    <span class="precio">{{ '%.2f'|format(p['precio']) }} €</span>
+  </article>
+{% endfor %}
+</div>
+{% endblock %}

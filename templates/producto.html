@@ -1,0 +1,43 @@
+{% extends "base.html" %}
+{% block titulo %}{{ p['nombre'] }}{% endblock %}
+{% block contenido %}
+<p><a href="/">← Volver al catalogo</a></p>
+<h1>{{ p['nombre'] }}</h1>
+<p><small>{{ p['categoria'] }}</small></p>
+<p>{{ p['descripcion'] }}</p>
+<p class="precio">{{ '%.2f'|format(p['precio']) }} € · {{ p['stock'] }} en stock</p>
+
+<div class="panel">
+  <h2>Comprar</h2>
+  {% if usuario %}
+  <form method="post" action="/comprar/{{ p['id'] }}">
+    <label for="cantidad">Cantidad</label>
+    <input id="cantidad" type="number" name="cantidad" value="1" min="1">
+    <label for="direccion">Direccion de envio</label>
+    <input id="direccion" name="direccion" required>
+    <label for="telefono">Telefono</label>
+    <input id="telefono" name="telefono" required>
+    <p><button type="submit">Confirmar pedido</button></p>
+  </form>
+  {% else %}
+  <p><a href="/login">Entra</a> para comprar este componente.</p>
+  {% endif %}
+</div>
+
+<h2>Opiniones</h2>
+{% for r in resenas %}
+  <div class="resena">
+    <small>{{ r['autor'] }}</small>
+    <div>{{ r['texto']|safe }}</div>
+  </div>
+{% else %}
+  <p>Todavia no hay opiniones. Se el primero.</p>
+{% endfor %}
+{% if usuario %}
+<form method="post" action="/producto/{{ p['id'] }}/resena" class="panel">
+  <label for="texto">Tu opinion</label>
+  <textarea id="texto" name="texto" rows="3" required></textarea>
+  <p><button type="submit">Publicar opinion</button></p>
+</form>
+{% endif %}
+{% endblock %}

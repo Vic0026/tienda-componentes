@@ -1,0 +1,16 @@
+{% extends "base.html" %}
+{% block titulo %}Mis pedidos{% endblock %}
+{% block contenido %}
+<h1>Mis pedidos</h1>
+{% if filas %}
+<div class="tabla"><table>
+  <tr><th>Pedido</th><th>Componente</th><th>Cantidad</th><th>Total</th></tr>
+  {% for o in filas %}
+  <tr><td><a href="/pedido/{{ o['id'] }}">#{{ o['id'] }}</a></td><td>{{ o['nombre'] }}</td>
+      <td>{{ o['cantidad'] }}</td><td>{{ '%.2f'|format(o['total']) }} €</td></tr>
+  {% endfor %}
+</table></div>
+{% else %}
+<p>Aun no has hecho ningun pedido. <a href="/">Ver el catalogo</a>.</p>
+{% endif %}
+{% endblock %}

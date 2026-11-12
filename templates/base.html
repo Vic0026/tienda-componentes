@@ -1,0 +1,31 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>{% block titulo %}PCForge{% endblock %} · PCForge</title>
+<link rel="stylesheet" href="/static/style.css">
+</head>
+<body>
+<header class="top">
+  <a class="logo" href="/">PC<b>Forge</b></a>
+  <form action="/buscar" method="get" role="search">
+    <input type="search" name="q" placeholder="Buscar componentes" aria-label="Buscar componentes">
+    <button type="submit">Buscar</button>
+  </form>
+  <nav class="cuenta">
+    {% if usuario %}
+      <span>Hola, {{ usuario['username'] }}</span>
+      <a href="/pedidos">Mis pedidos</a>
+      {% if usuario['rol'] == 'admin' %}<a href="/admin">Administracion</a>{% endif %}
+      <a href="/logout">Salir</a>
+    {% else %}
+      <a href="/login">Entrar</a>
+      <a href="/registro">Crear cuenta</a>
+    {% endif %}
+  </nav>
+</header>
+<main>{% block contenido %}{% endblock %}</main>
+<footer>PCForge v{{ version }} · Entorno de practicas con vulnerabilidades intencionadas. Datos ficticios.</footer>
+</body>
+</html>
