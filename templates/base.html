@@ -3,6 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="description" content="PCForge - Tienda online de componentes de ordenador y hardware de alto rendimiento.">
 <title>{% block titulo %}PCForge{% endblock %} · PCForge</title>
 <link rel="stylesheet" href="/static/style.css">
 </head>
@@ -10,22 +11,43 @@
 <header class="top">
   <a class="logo" href="/">PC<b>Forge</b></a>
   <form action="/buscar" method="get" role="search">
-    <input type="search" name="q" placeholder="Buscar componentes" aria-label="Buscar componentes">
+    <input type="search" name="q" placeholder="Buscar componentes" aria-label="Buscar componentes" value="{{ q|default('') }}">
     <button type="submit">Buscar</button>
   </form>
   <nav class="cuenta">
+    <a href="/contacto">Contacto</a>
     {% if usuario %}
       <span>Hola, {{ usuario['username'] }}</span>
       <a href="/pedidos">Mis pedidos</a>
       {% if usuario['rol'] == 'admin' %}<a href="/admin">Administracion</a>{% endif %}
-      <a href="/logout">Salir</a>
+      <form action="/logout" method="post" style="display:inline;margin:0">
+        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+        <button type="submit" style="padding:5px 10px;font-size:.85rem">Salir</button>
+      </form>
     {% else %}
       <a href="/login">Entrar</a>
       <a href="/registro">Crear cuenta</a>
     {% endif %}
   </nav>
 </header>
-<main>{% block contenido %}{% endblock %}</main>
-<footer>PCForge v{{ version }} · Entorno de practicas con vulnerabilidades intencionadas. Datos ficticios.</footer>
+<main>
+  {% with messages = get_flashed_messages(with_categories=true) %}
+    {% for category, msg in messages %}
+      <div class="flash {{ category }}">{{ msg }}</div>
+    {% endfor %}
+  {% endwith %}
+  {% block contenido %}{% endblock %}
+</main>
+<footer>
+  <div class="footer-grid">
+    <span>PCForge v{{ version }} · Todos los derechos reservados.</span>
+    <div class="footer-links">
+      <a href="/contacto">Contacto</a>
+      <a href="/legal/aviso-legal">Aviso Legal</a>
+      <a href="/legal/privacidad">Politica de Privacidad</a>
+      <a href="/legal/cookies">Politica de Cookies</a>
+    </div>
+  </div>
+</footer>
 </body>
 </html>

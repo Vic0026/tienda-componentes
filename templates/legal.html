@@ -1,0 +1,19 @@
+{% extends "base.html" %}
+{% block titulo %}Informacion Legal{% endblock %}
+{% block contenido %}
+<div class="legal">
+{% if seccion == 'aviso-legal' %}
+  <h1>Aviso Legal</h1>
+  <p>En cumplimiento con el deber de informacion recogido en la Ley 34/2002 (LSSI-CE), se informa que este sitio web es operado por <strong>PCForge Hardware</strong>.</p>
+  <p>Los precios mostrados incluyen los impuestos aplicables y estan sujetos a disponibilidad de stock.</p>
+{% elif seccion == 'privacidad' %}
+  <h1>Politica de Privacidad</h1>
+  <p>De conformidad con el Reglamento General de Proteccion de Datos (RGPD), los datos personales facilitados en el registro, formularios de contacto o compra se trataran unicamente para gestionar tus pedidos, atender tus consultas y remitirte las confirmaciones correspondientes.</p>
+  <p>Puedes ejercer tus derechos de acceso, rectificacion y supresion escribiendo a traves de nuestro <a href="/contacto">formulario de contacto</a>.</p>
+{% else %}
+  <h1>Politica de Cookies</h1>
+  <p>Este sitio web utiliza exclusivamente cookies tecnicas estrictamente necesarias para mantener tu sesion iniciada de forma segura (<code>HttpOnly</code>, <code>SameSite=Lax</code>) y proteger los formularios contra ataques CSRF.</p>
+  <p>No utilizamos cookies publicitarias ni de rastreo de terceros.</p>
+{% endif %}
+</div>
+{% endblock %}

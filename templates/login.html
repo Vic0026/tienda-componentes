@@ -3,6 +3,7 @@
 {% block contenido %}
 <h1>Entrar</h1>
 <form method="post" class="panel">
+  <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
   {% if error %}<p class="err">{{ error }}</p>{% endif %}
   <label for="username">Usuario</label>
   <input id="username" name="username" autocomplete="username" required>

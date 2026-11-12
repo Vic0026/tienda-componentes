@@ -3,13 +3,14 @@
 {% block contenido %}
 <h1>Crear cuenta</h1>
 <form method="post" class="panel">
+  <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
   {% if error %}<p class="err">{{ error }}</p>{% endif %}
   <label for="username">Usuario</label>
-  <input id="username" name="username" required>
-  <label for="email">Correo</label>
-  <input id="email" type="email" name="email">
-  <label for="password">Contrasena</label>
-  <input id="password" type="password" name="password" autocomplete="new-password" required>
+  <input id="username" name="username" pattern="[a-zA-Z0-9_.-]{3,30}" title="3 a 30 caracteres alfanumericos" required>
+  <label for="email">Correo electronico</label>
+  <input id="email" type="email" name="email" required>
+  <label for="password">Contrasena (minimo 8 caracteres)</label>
+  <input id="password" type="password" name="password" minlength="8" autocomplete="new-password" required>
   <p><button type="submit">Crear cuenta</button></p>
 </form>
 {% endblock %}

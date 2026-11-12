@@ -1,8 +1,7 @@
 {% extends "base.html" %}
 {% block titulo %}Busqueda{% endblock %}
 {% block contenido %}
-<h1>Resultados para: {{ q|safe }}</h1>
-{% if error %}<p class="err">Error en la busqueda: {{ error }}</p>{% endif %}
+<h1>Resultados para: {{ q }}</h1>
 {% if filas %}
 <div class="grid">
 {% for p in filas %}
@@ -15,7 +14,7 @@
   </article>
 {% endfor %}
 </div>
-{% elif not error %}
-<p>No hay componentes que coincidan. Prueba con otra marca o modelo.</p>
+{% else %}
+<p>No hay componentes que coincidan con tu busqueda. Prueba con otra marca o modelo.</p>
 {% endif %}
 {% endblock %}

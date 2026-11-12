@@ -13,35 +13,45 @@
 </div>
 
 <div class="panel">
-  <h2>Comprar</h2>
+  <h2>Comprar componente</h2>
   {% if usuario %}
-  <form method="post" action="/comprar/{{ p['id'] }}">
-    <label for="cantidad">Cantidad</label>
-    <input id="cantidad" type="number" name="cantidad" value="1" min="1">
-    <label for="direccion">Direccion de envio</label>
-    <input id="direccion" name="direccion" required>
-    <label for="telefono">Telefono</label>
-    <input id="telefono" name="telefono" required>
-    <p><button type="submit">Confirmar pedido</button></p>
-  </form>
+    {% if p['stock'] > 0 %}
+    <form method="post" action="/comprar/{{ p['id'] }}">
+      <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+      <label for="cantidad">Cantidad</label>
+      <input id="cantidad" type="number" name="cantidad" value="1" min="1" max="{{ p['stock'] }}" required>
+      <label for="direccion">Direccion de envio</label>
+      <input id="direccion" name="direccion" placeholder="Calle, numero, piso, CP y ciudad" required>
+      <label for="telefono">Telefono de contacto</label>
+      <input id="telefono" name="telefono" type="tel" placeholder="600123456" required>
+      <p>
+        <button type="submit">
+          {% if stripe_activo %}Continuar al pago con Stripe{% else %}Realizar pedido y pagar{% endif %}
+        </button>
+      </p>
+    </form>
+    {% else %}
+    <p class="err">Producto temporalmente sin stock.</p>
+    {% endif %}
   {% else %}
-  <p><a href="/login">Entra</a> para comprar este componente.</p>
+  <p><a href="/login">Inicia sesion</a> o <a href="/registro">crea una cuenta</a> para comprar este componente.</p>
   {% endif %}
 </div>
 
-<h2>Opiniones</h2>
+<h2>Opiniones de clientes</h2>
 {% for r in resenas %}
   <div class="resena">
     <small>{{ r['autor'] }}</small>
-    <div>{{ r['texto']|safe }}</div>
+    <div>{{ r['texto'] }}</div>
   </div>
 {% else %}
-  <p>Todavia no hay opiniones. Se el primero.</p>
+  <p>Todavia no hay opiniones. Se el primero en valorar este producto.</p>
 {% endfor %}
 {% if usuario %}
 <form method="post" action="/producto/{{ p['id'] }}/resena" class="panel">
+  <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
   <label for="texto">Tu opinion</label>
-  <textarea id="texto" name="texto" rows="3" required></textarea>
+  <textarea id="texto" name="texto" rows="3" maxlength="600" required></textarea>
   <p><button type="submit">Publicar opinion</button></p>
 </form>
 {% endif %}

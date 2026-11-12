@@ -1,0 +1,22 @@
+{% extends "base.html" %}
+{% block titulo %}Contacto{% endblock %}
+{% block contenido %}
+<h1>Contacto y Soporte</h1>
+<p>¿Tienes dudas sobre compatibilidad de componentes, pedidos o presupuestos a medida? Escribenos y te responderemos por correo.</p>
+<form method="post" action="/contacto" class="panel">
+  <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+  <div style="display:none" aria-hidden="true">
+    <label for="website">No rellenar este campo</label>
+    <input id="website" name="website" tabindex="-1" autocomplete="off">
+  </div>
+  <label for="nombre">Nombre completo</label>
+  <input id="nombre" name="nombre" maxlength="100" required>
+  <label for="email">Correo electronico</label>
+  <input id="email" type="email" name="email" maxlength="120" required>
+  <label for="asunto">Asunto</label>
+  <input id="asunto" name="asunto" maxlength="150" placeholder="Consulta sobre componente o pedido" required>
+  <label for="mensaje">Mensaje</label>
+  <textarea id="mensaje" name="mensaje" rows="5" maxlength="2000" required></textarea>
+  <p><button type="submit">Enviar mensaje</button></p>
+</form>
+{% endblock %}

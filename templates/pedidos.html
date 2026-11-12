@@ -4,10 +4,15 @@
 <h1>Mis pedidos</h1>
 {% if filas %}
 <div class="tabla"><table>
-  <tr><th>Pedido</th><th>Componente</th><th>Cantidad</th><th>Total</th></tr>
+  <tr><th>Pedido</th><th>Componente</th><th>Cantidad</th><th>Total</th><th>Estado</th></tr>
   {% for o in filas %}
-  <tr><td><a href="/pedido/{{ o['id'] }}">#{{ o['id'] }}</a></td><td>{{ o['nombre'] }}</td>
-      <td>{{ o['cantidad'] }}</td><td>{{ '%.2f'|format(o['total']) }} €</td></tr>
+  <tr>
+    <td><a href="/pedido/{{ o['id'] }}">#{{ o['id'] }}</a></td>
+    <td>{{ o['nombre'] }}</td>
+    <td>{{ o['cantidad'] }}</td>
+    <td>{{ '%.2f'|format(o['total']) }} €</td>
+    <td><span class="badge {{ 'pend' if o['estado_pago'] != 'pagado' }}">{{ o['estado_pago']|upper }}</span></td>
+  </tr>
   {% endfor %}
 </table></div>
 {% else %}

@@ -3,11 +3,20 @@
 {% block contenido %}
 <h1>Pedido #{{ o['id'] }}</h1>
 <div class="panel">
+  <p><strong>Estado del pago:</strong> <span class="badge {{ 'pend' if o['estado_pago'] != 'pagado' }}">{{ o['estado_pago']|upper }}</span></p>
   <p><strong>Componente:</strong> {{ o['nombre'] }} × {{ o['cantidad'] }}</p>
   <p><strong>Total:</strong> {{ '%.2f'|format(o['total']) }} €</p>
   <p><strong>Cliente:</strong> {{ o['username'] }} ({{ o['email'] }})</p>
   <p><strong>Envio a:</strong> {{ o['direccion'] }}</p>
   <p><strong>Telefono:</strong> {{ o['telefono'] }}</p>
+
+  {% if o['estado_pago'] != 'pagado' %}
+  <hr style="border:0;border-top:1px solid var(--linea);margin:16px 0">
+  <form method="post" action="/pedido/{{ o['id'] }}/pagar-demo">
+    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+    <button type="submit">Confirmar y pagar pedido ({{ '%.2f'|format(o['total']) }} €)</button>
+  </form>
+  {% endif %}
 </div>
 <p><a href="/pedidos">← Mis pedidos</a></p>
 {% endblock %}

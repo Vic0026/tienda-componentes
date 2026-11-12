@@ -1,15 +1,43 @@
 {% extends "base.html" %}
 {% block titulo %}Administracion{% endblock %}
 {% block contenido %}
-<h1>Administracion</h1>
-<h2>Usuarios</h2>
+<h1>Panel de Administracion</h1>
+<h2>Usuarios registrados</h2>
 <div class="tabla"><table>
   <tr><th>ID</th><th>Usuario</th><th>Correo</th><th>Rol</th></tr>
   {% for u in usuarios %}<tr><td>{{ u['id'] }}</td><td>{{ u['username'] }}</td><td>{{ u['email'] }}</td><td>{{ u['rol'] }}</td></tr>{% endfor %}
 </table></div>
-<h2>Ventas</h2>
+
+<h2>Ventas y pedidos</h2>
 <div class="tabla"><table>
-  <tr><th>Pedido</th><th>Cliente</th><th>Componente</th><th>Cant.</th><th>Total</th></tr>
-  {% for v in ventas %}<tr><td>#{{ v['id'] }}</td><td>{{ v['username'] }}</td><td>{{ v['nombre'] }}</td><td>{{ v['cantidad'] }}</td><td>{{ '%.2f'|format(v['total']) }} €</td></tr>{% endfor %}
+  <tr><th>Pedido</th><th>Cliente</th><th>Componente</th><th>Cant.</th><th>Total</th><th>Estado</th></tr>
+  {% for v in ventas %}
+  <tr>
+    <td><a href="/pedido/{{ v['id'] }}">#{{ v['id'] }}</a></td>
+    <td>{{ v['username'] }}</td>
+    <td>{{ v['nombre'] }}</td>
+    <td>{{ v['cantidad'] }}</td>
+    <td>{{ '%.2f'|format(v['total']) }} €</td>
+    <td><span class="badge {{ 'pend' if v['estado_pago'] != 'pagado' }}">{{ v['estado_pago']|upper }}</span></td>
+  </tr>
+  {% endfor %}
 </table></div>
+
+<h2>Mensajes de contacto recibidos</h2>
+{% if mensajes %}
+<div class="tabla"><table>
+  <tr><th>Fecha</th><th>Nombre</th><th>Correo</th><th>Asunto</th><th>Mensaje</th></tr>
+  {% for m in mensajes %}
+  <tr>
+    <td>{{ m['fecha'] }}</td>
+    <td>{{ m['nombre'] }}</td>
+    <td>{{ m['email'] }}</td>
+    <td>{{ m['asunto'] }}</td>
+    <td>{{ m['mensaje'] }}</td>
+  </tr>
+  {% endfor %}
+</table></div>
+{% else %}
+<p>No hay mensajes de contacto todavia.</p>
+{% endif %}
 {% endblock %}
