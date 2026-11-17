@@ -1,0 +1,26 @@
+# Configuración de despliegue para Render (https://render.com).
+# Uso: New → Blueprint → conectar este repositorio → Apply.
+services:
+  - type: web
+    name: pcforge
+    runtime: python
+    plan: free
+    buildCommand: pip install -r requirements.txt
+    startCommand: gunicorn app:app
+    healthCheckPath: /
+    envVars:
+      # Render genera un valor aleatorio y lo mantiene entre despliegues.
+      - key: SECRET_KEY
+        generateValue: true
+      # Te lo pedirá al crear el servicio (no se guarda en el repositorio).
+      - key: ADMIN_PASSWORD
+        sync: false
+      - key: HTTPS_ENABLED
+        value: "1"
+      - key: BEHIND_PROXY
+        value: "1"
+      # 1 = pasarela de pago simulada. Pon 0 si configuras Stripe.
+      - key: DEMO_PAYMENTS
+        value: "1"
+      - key: SEED_DEMO_USERS
+        value: "0"
