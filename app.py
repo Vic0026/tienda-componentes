@@ -7,6 +7,7 @@ import secrets
 import smtplib
 import sqlite3
 import time
+from datetime import datetime
 from email.message import EmailMessage
 from functools import wraps
 
@@ -108,6 +109,10 @@ def init_db():
         total REAL NOT NULL,
         estado_pago TEXT NOT NULL DEFAULT 'pendiente',
         stripe_session_id TEXT,
+        metodo_pago TEXT,
+        referencia_pago TEXT,
+        tarjeta_ultimos4 TEXT,
+        pagado_en TIMESTAMP,
         FOREIGN KEY(usuario_id) REFERENCES usuarios(id),
         FOREIGN KEY(producto_id) REFERENCES productos(id)
     );
@@ -120,8 +125,11 @@ def init_db():
         fecha TIMESTAMP DEFAULT CURRENT_TIMESTAMP
     );
     """)
+    clave_admin = os.environ.get("ADMIN_PASSWORD") or secrets.token_urlsafe(12)
+    if not os.environ.get("ADMIN_PASSWORD"):
+        print(f"[PCForge] Contrasena de admin generada (guardala): {clave_admin}")
     usuarios = [
-        ("admin", generate_password_hash("Admin#2026!Segura"), "admin", "admin@pcforge.es"),
+        ("admin", generate_password_hash(clave_admin), "admin", "admin@pcforge.es"),
         ("ana", generate_password_hash("Ana#2026!Segura"), "cliente", "ana@pcforge.es"),
         ("luis", generate_password_hash("Luis#2026!Segura"), "cliente", "luis@pcforge.es"),
     ]
@@ -152,6 +160,34 @@ def init_db():
             (5, "ana", "Perfil EXPO a la primera, sin sustos."),
         ],
     )
+    c.commit()
+    c.close()
+
+
+RATE = {}
+
+
+def permitir(nombre, maximo, ventana):
+    """Limitador simple por IP y accion. Devuelve False si se supera el maximo."""
+    clave = (nombre, request.remote_addr or "local")
+    ahora = time.time()
+    marcas = [t for t in RATE.get(clave, []) if ahora - t < ventana]
+    if len(marcas) >= maximo:
+        RATE[clave] = marcas
+        return False
+    marcas.append(ahora)
+    RATE[clave] = marcas
+    return True
+
+
+def migrar_db():
+    """Anade las columnas de pago a bases de datos creadas con versiones anteriores."""
+    c = sqlite3.connect(DB_PATH)
+    cols = {r[1] for r in c.execute("PRAGMA table_info(pedidos)")}
+    for nombre, tipo in (("metodo_pago", "TEXT"), ("referencia_pago", "TEXT"),
+                         ("tarjeta_ultimos4", "TEXT"), ("pagado_en", "TIMESTAMP")):
+        if nombre not in cols:
+            c.execute(f"ALTER TABLE pedidos ADD COLUMN {nombre} {tipo}")
     c.commit()
     c.close()
 
@@ -228,6 +264,7 @@ def inyectar():
         "version": APP_VERSION,
         "csrf_token": generar_csrf,
         "stripe_activo": bool(stripe and STRIPE_SECRET_KEY),
+        "demo_activo": demo_activo(),
     }
 
 
@@ -309,6 +346,9 @@ def buscar():
 @app.route("/contacto", methods=["GET", "POST"])
 def contacto():
     if request.method == "POST":
+        if not permitir("contacto", 3, 600):
+            flash("Has enviado varios mensajes seguidos. Espera unos minutos.", "err")
+            return render_template("contacto.html"), 429
         nombre = request.form.get("nombre", "").strip()
         email = request.form.get("email", "").strip()
         asunto = request.form.get("asunto", "").strip()
@@ -451,96 +491,167 @@ def comprar(pid):
     oid = cur.lastrowid
     db().commit()
 
-    # Si Stripe esta configurado, redirigimos a Stripe Checkout
     if stripe and STRIPE_SECRET_KEY:
-        try:
-            checkout = stripe.checkout.Session.create(
-                payment_method_types=["card"],
-                customer_email=u["email"],
-                line_items=[
-                    {
-                        "price_data": {
-                            "currency": "eur",
-                            "product_data": {"name": p["nombre"]},
-                            "unit_amount": int(round(p["precio"] * 100)),
-                        },
-                        "quantity": cant,
-                    }
-                ],
-                mode="payment",
-                metadata={"pedido_id": str(oid), "usuario_id": str(u["id"])},
-                success_url=url_for("pago_exito", oid=oid, _external=True) + "?session_id={CHECKOUT_SESSION_ID}",
-                cancel_url=url_for("pedido", oid=oid, _external=True),
-            )
-            db().execute("UPDATE pedidos SET stripe_session_id=? WHERE id=?", (checkout.id, oid))
-            db().commit()
-            return redirect(checkout.url, code=303)
-        except Exception:
-            app.logger.exception("Error creando sesion de Stripe")
-            flash("No se pudo iniciar la pasarela Stripe. Puedes completar el pago simulado desde el pedido.", "err")
-            return redirect(url_for("pedido", oid=oid))
-
+        return iniciar_stripe(oid, p["nombre"], p["precio"], cant, u["email"])
+    if demo_activo():
+        return redirect(url_for("pagar", oid=oid))
+    flash("Pedido registrado. El pago online no esta disponible ahora mismo.", "err")
     return redirect(url_for("pedido", oid=oid))
 
 
-@app.route("/pedido/<int:oid>/pagar-demo", methods=["POST"])
+# ---------------------------------------------------------------- pagos
+def demo_activo():
+    """Pasarela simulada: solo sin Stripe y con DEMO_PAYMENTS=1 (poner 0 en produccion)."""
+    return not (stripe and STRIPE_SECRET_KEY) and os.environ.get("DEMO_PAYMENTS", "1") == "1"
+
+
+def luhn_ok(num):
+    total = 0
+    for i, d in enumerate(reversed(num)):
+        n = int(d)
+        if i % 2:
+            n = n * 2 - 9 if n * 2 > 9 else n * 2
+        total += n
+    return total % 10 == 0
+
+
+def marca_tarjeta(num):
+    if num.startswith("4"):
+        return "Visa"
+    if num[:2] in ("51", "52", "53", "54", "55") or 2221 <= int(num[:4]) <= 2720:
+        return "Mastercard"
+    if num[:2] in ("34", "37"):
+        return "Amex"
+    return "Tarjeta"
+
+
+def marcar_pagado(oid, metodo, referencia, ultimos4=None):
+    """Idempotente: solo la primera llamada marca el pago, descuenta stock y envia el recibo."""
+    conn = db()
+    cur = conn.execute(
+        "UPDATE pedidos SET estado_pago='pagado', metodo_pago=?, referencia_pago=?, "
+        "tarjeta_ultimos4=?, pagado_en=CURRENT_TIMESTAMP WHERE id=? AND estado_pago!='pagado'",
+        (metodo, referencia, ultimos4, oid),
+    )
+    if cur.rowcount != 1:
+        conn.rollback()
+        return False
+    fila = conn.execute(
+        "SELECT pe.*, pr.nombre, us.username, us.email FROM pedidos pe "
+        "JOIN productos pr ON pr.id=pe.producto_id JOIN usuarios us ON us.id=pe.usuario_id WHERE pe.id=?",
+        (oid,),
+    ).fetchone()
+    conn.execute("UPDATE productos SET stock = MAX(0, stock - ?) WHERE id=?", (fila["cantidad"], fila["producto_id"]))
+    conn.commit()
+    try:
+        enviar_correo(
+            fila["email"],
+            f"Recibo del pedido #{oid} - PCForge",
+            f"Hola {fila['username']},\n\nHemos recibido tu pago de {fila['total']:.2f} EUR.\n\n"
+            f"Pedido #{oid}: {fila['nombre']} x{fila['cantidad']}\nReferencia de pago: {referencia}\n"
+            f"Envio a: {fila['direccion']}\n\nGracias por tu compra,\nEquipo PCForge",
+        )
+    except Exception:
+        app.logger.exception("No se pudo enviar el recibo del pedido %s", oid)
+    return True
+
+
+def iniciar_stripe(oid, nombre, precio, cant, email):
+    try:
+        cs = stripe.checkout.Session.create(
+            payment_method_types=["card"],
+            customer_email=email,
+            line_items=[{
+                "price_data": {"currency": "eur", "product_data": {"name": nombre},
+                               "unit_amount": int(round(precio * 100))},
+                "quantity": cant,
+            }],
+            mode="payment",
+            metadata={"pedido_id": str(oid)},
+            success_url=url_for("pago_exito", oid=oid, _external=True) + "?session_id={CHECKOUT_SESSION_ID}",
+            cancel_url=url_for("pedido", oid=oid, _external=True),
+        )
+        db().execute("UPDATE pedidos SET stripe_session_id=? WHERE id=?", (cs.id, oid))
+        db().commit()
+        return redirect(cs.url, code=303)
+    except Exception:
+        app.logger.exception("Error creando sesion de Stripe")
+        flash("No se pudo iniciar el pago. Puedes reintentarlo desde tu pedido.", "err")
+        return redirect(url_for("pedido", oid=oid))
+
+
+@app.route("/pedido/<int:oid>/pagar", methods=["GET", "POST"])
 @login_requerido
-def pagar_demo(oid):
-    """Permite probar el flujo completo de pago y correo sin necesidad de cuenta Stripe activa."""
+def pagar(oid):
     u = usuario_actual()
-    fila = db().execute(
-        "SELECT pe.*, pr.nombre FROM pedidos pe JOIN productos pr ON pr.id=pe.producto_id "
+    o = db().execute(
+        "SELECT pe.*, pr.nombre, pr.precio, pr.stock FROM pedidos pe JOIN productos pr ON pr.id=pe.producto_id "
         "WHERE pe.id=? AND pe.usuario_id=?",
         (oid, u["id"]),
     ).fetchone()
-    if not fila:
+    if not o:
+        abort(404)
+    if o["estado_pago"] == "pagado":
+        return redirect(url_for("pedido", oid=oid))
+    if o["stock"] < o["cantidad"]:
+        flash("Ya no queda stock suficiente para este pedido.", "err")
+        return redirect(url_for("pedido", oid=oid))
+
+    if stripe and STRIPE_SECRET_KEY:  # pago real: siempre en la pagina de Stripe
+        if request.method != "POST":
+            return redirect(url_for("pedido", oid=oid))
+        return iniciar_stripe(oid, o["nombre"], o["precio"], o["cantidad"], u["email"])
+    if not demo_activo():
         abort(404)
 
-    if fila["estado_pago"] != "pagado":
-        db().execute("UPDATE pedidos SET estado_pago='pagado' WHERE id=?", (oid,))
-        db().execute("UPDATE productos SET stock = MAX(0, stock - ?) WHERE id=?", (fila["cantidad"], fila["producto_id"]))
-        db().commit()
-        enviar_correo(
-            u["email"],
-            f"Confirmacion de pedido #{oid} - PCForge",
-            f"Hola {u['username']},\n\nTu pago de {fila['total']:.2f} EUR por {fila['nombre']} (x{fila['cantidad']}) se ha confirmado.\nDireccion de envio: {fila['direccion']}",
-        )
-    flash("Pago confirmado correctamente. Hemos enviado el recibo a tu correo.", "ok")
-    return redirect(url_for("pedido", oid=oid))
+    error = None
+    if request.method == "POST":
+        if not permitir("pago", 8, 600):
+            return render_template("pago.html", o=o, error="Demasiados intentos. Espera unos minutos."), 429
+        titular = request.form.get("titular", "").strip()
+        num = re.sub(r"[ -]", "", request.form.get("numero", ""))
+        exp = request.form.get("caducidad", "").strip()
+        cvv = request.form.get("cvv", "").strip()
+        m = re.match(r"^(\d{2})\s*/\s*(\d{2})$", exp)
+        ahora = datetime.now()
+        if len(titular) < 3:
+            error = "Indica el nombre del titular."
+        elif not (num.isdigit() and 13 <= len(num) <= 19 and luhn_ok(num)):
+            error = "El numero de tarjeta no es valido."
+        elif not m or not (1 <= int(m[1]) <= 12) or (int(m[2]), int(m[1])) < (ahora.year % 100, ahora.month):
+            error = "La fecha de caducidad no es valida o la tarjeta ha caducado."
+        elif not re.match(r"^\d{3,4}$", cvv):
+            error = "El CVV no es valido."
+        elif num == "4000000000000002":
+            error = "Tarjeta rechazada por el emisor. Prueba con otra tarjeta."
+        else:
+            # Nunca se guarda el numero completo ni el CVV: solo la marca y los 4 ultimos digitos.
+            marcar_pagado(oid, "simulado " + marca_tarjeta(num), "SIM-" + secrets.token_hex(5).upper(), num[-4:])
+            flash("Pago aceptado. Te hemos enviado el recibo por correo.", "ok")
+            return redirect(url_for("pedido", oid=oid))
+    return render_template("pago.html", o=o, error=error)
 
 
 @app.route("/pago/exito/<int:oid>")
 @login_requerido
 def pago_exito(oid):
     u = usuario_actual()
-    fila = db().execute(
-        "SELECT pe.*, pr.nombre FROM pedidos pe JOIN productos pr ON pr.id=pe.producto_id "
-        "WHERE pe.id=? AND pe.usuario_id=?",
-        (oid, u["id"]),
-    ).fetchone()
+    fila = db().execute("SELECT * FROM pedidos WHERE id=? AND usuario_id=?", (oid, u["id"])).fetchone()
     if not fila:
         abort(404)
-
     session_id = request.args.get("session_id", "")
     if stripe and STRIPE_SECRET_KEY and session_id and fila["stripe_session_id"] == session_id:
         try:
             cs = stripe.checkout.Session.retrieve(session_id)
-            if cs.payment_status == "paid" and fila["estado_pago"] != "pagado":
-                db().execute("UPDATE pedidos SET estado_pago='pagado' WHERE id=?", (oid,))
-                db().execute(
-                    "UPDATE productos SET stock = MAX(0, stock - ?) WHERE id=?",
-                    (fila["cantidad"], fila["producto_id"]),
-                )
-                db().commit()
-                enviar_correo(
-                    u["email"],
-                    f"Confirmacion de pedido #{oid} - PCForge",
-                    f"Hola {u['username']},\n\nHemos recibido tu pago de {fila['total']:.2f} EUR por {fila['nombre']}.",
-                )
+            if cs.payment_status == "paid" and cs.amount_total == int(round(fila["total"] * 100)):
+                marcar_pagado(oid, "stripe", cs.payment_intent or cs.id)
         except Exception:
             app.logger.exception("Error verificando sesion Stripe")
-
-    flash("Pago procesado correctamente.", "ok")
+    actual = db().execute("SELECT estado_pago FROM pedidos WHERE id=?", (oid,)).fetchone()
+    if actual["estado_pago"] == "pagado":
+        flash("Pago confirmado. Te hemos enviado el recibo por correo.", "ok")
+    else:
+        flash("Estamos esperando la confirmacion del pago. Recarga en unos segundos.", "err")
     return redirect(url_for("pedido", oid=oid))
 
 
@@ -548,21 +659,18 @@ def pago_exito(oid):
 def stripe_webhook():
     if not (stripe and STRIPE_SECRET_KEY and STRIPE_WEBHOOK_SECRET):
         return "", 400
-    payload = request.get_data()
-    sig = request.headers.get("Stripe-Signature", "")
     try:
-        event = stripe.Webhook.construct_event(payload, sig, STRIPE_WEBHOOK_SECRET)
+        event = stripe.Webhook.construct_event(
+            request.get_data(), request.headers.get("Stripe-Signature", ""), STRIPE_WEBHOOK_SECRET)
     except Exception:
         return "", 400
-
-    if event["type"] == "checkout.session.completed":
+    if event["type"] in ("checkout.session.completed", "checkout.session.async_payment_succeeded"):
         cs = event["data"]["object"]
-        oid = cs.get("metadata", {}).get("pedido_id")
-        if oid:
-            conn = sqlite3.connect(DB_PATH)
-            conn.execute("UPDATE pedidos SET estado_pago='pagado' WHERE id=?", (oid,))
-            conn.commit()
-            conn.close()
+        oid = (cs.get("metadata") or {}).get("pedido_id")
+        if oid and cs.get("payment_status") == "paid":
+            fila = db().execute("SELECT total FROM pedidos WHERE id=?", (oid,)).fetchone()
+            if fila and cs.get("amount_total") == int(round(fila["total"] * 100)):
+                marcar_pagado(int(oid), "stripe", cs.get("payment_intent") or cs.get("id"))
     return "", 200
 
 
@@ -636,4 +744,5 @@ def err_404(_e):
 
 if __name__ == "__main__":
     init_db()
+    migrar_db()
     app.run(host="127.0.0.1", port=5000, debug=False)

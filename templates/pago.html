@@ -1,0 +1,33 @@
+{% extends "base.html" %}
+{% block titulo %}Pago del pedido #{{ o['id'] }}{% endblock %}
+{% block contenido %}
+<h1>Finalizar pago</h1>
+<div class="pago">
+  <form method="post" class="panel" autocomplete="on">
+    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+    <p class="aviso-pago"><strong>Modo de pruebas.</strong> Pasarela simulada: no introduzcas una tarjeta real.
+      Usa <code>4242 4242 4242 4242</code> (aprobada) o <code>4000 0000 0000 0002</code> (rechazada), una fecha futura y cualquier CVV.</p>
+    {% if error %}<p class="err">{{ error }}</p>{% endif %}
+    <label for="titular">Titular de la tarjeta</label>
+    <input id="titular" name="titular" autocomplete="cc-name" maxlength="60" required>
+    <label for="numero">Numero de tarjeta</label>
+    <input id="numero" name="numero" inputmode="numeric" autocomplete="cc-number" maxlength="23" placeholder="4242 4242 4242 4242" required>
+    <div class="fila">
+      <div><label for="caducidad">Caducidad</label>
+        <input id="caducidad" name="caducidad" autocomplete="cc-exp" placeholder="MM/AA" maxlength="7" required></div>
+      <div><label for="cvv">CVV</label>
+        <input id="cvv" name="cvv" type="password" inputmode="numeric" autocomplete="cc-csc" maxlength="4" required></div>
+    </div>
+    <p><button type="submit">Pagar {{ '%.2f'|format(o['total']) }} €</button></p>
+    <p><small>No guardamos el numero ni el CVV: solo la marca y los ultimos 4 digitos para tu recibo.</small></p>
+  </form>
+  <aside class="panel resumen">
+    <h2>Resumen</h2>
+    <img class="thumb" src="/static/img/{{ o['producto_id'] }}.svg" alt="{{ o['nombre'] }}">
+    <p><strong>{{ o['nombre'] }}</strong> × {{ o['cantidad'] }}</p>
+    <p class="precio">{{ '%.2f'|format(o['total']) }} €</p>
+    <p><small>Envio a: {{ o['direccion'] }}</small></p>
+    <p><small>El recibo se enviara al correo de tu cuenta.</small></p>
+  </aside>
+</div>
+{% endblock %}

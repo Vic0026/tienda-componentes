@@ -10,12 +10,22 @@
   <p><strong>Envio a:</strong> {{ o['direccion'] }}</p>
   <p><strong>Telefono:</strong> {{ o['telefono'] }}</p>
 
-  {% if o['estado_pago'] != 'pagado' %}
-  <hr style="border:0;border-top:1px solid var(--linea);margin:16px 0">
-  <form method="post" action="/pedido/{{ o['id'] }}/pagar-demo">
-    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
-    <button type="submit">Confirmar y pagar pedido ({{ '%.2f'|format(o['total']) }} €)</button>
-  </form>
+  <hr class="sep">
+  {% if o['estado_pago'] == 'pagado' %}
+    <p><strong>Pagado el:</strong> {{ o['pagado_en'] }} (UTC)</p>
+    <p><strong>Metodo:</strong> {{ o['metodo_pago']|capitalize }}{% if o['tarjeta_ultimos4'] %} · •••• {{ o['tarjeta_ultimos4'] }}{% endif %}</p>
+    <p><strong>Referencia:</strong> <code>{{ o['referencia_pago'] }}</code></p>
+  {% elif usuario['id'] == o['usuario_id'] %}
+    {% if stripe_activo %}
+    <form method="post" action="/pedido/{{ o['id'] }}/pagar">
+      <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+      <button type="submit">Pagar {{ '%.2f'|format(o['total']) }} € con tarjeta</button>
+    </form>
+    {% elif demo_activo %}
+    <a class="btn" href="/pedido/{{ o['id'] }}/pagar">Pagar {{ '%.2f'|format(o['total']) }} €</a>
+    {% else %}
+    <p>El pago online no esta disponible en este momento.</p>
+    {% endif %}
   {% endif %}
 </div>
 <p><a href="/pedidos">← Mis pedidos</a></p>
