@@ -3,30 +3,11 @@
 {% block contenido %}
 <h1>Pedido #{{ o['id'] }}</h1>
 <div class="panel">
-  <p><strong>Estado del pago:</strong> <span class="badge {{ 'pend' if o['estado_pago'] != 'pagado' }}">{{ o['estado_pago']|upper }}</span></p>
   <p><strong>Componente:</strong> {{ o['nombre'] }} × {{ o['cantidad'] }}</p>
   <p><strong>Total:</strong> {{ '%.2f'|format(o['total']) }} €</p>
   <p><strong>Cliente:</strong> {{ o['username'] }} ({{ o['email'] }})</p>
   <p><strong>Envio a:</strong> {{ o['direccion'] }}</p>
   <p><strong>Telefono:</strong> {{ o['telefono'] }}</p>
-
-  <hr class="sep">
-  {% if o['estado_pago'] == 'pagado' %}
-    <p><strong>Pagado el:</strong> {{ o['pagado_en'] }} (UTC)</p>
-    <p><strong>Metodo:</strong> {{ o['metodo_pago']|capitalize }}{% if o['tarjeta_ultimos4'] %} · •••• {{ o['tarjeta_ultimos4'] }}{% endif %}</p>
-    <p><strong>Referencia:</strong> <code>{{ o['referencia_pago'] }}</code></p>
-  {% elif usuario['id'] == o['usuario_id'] %}
-    {% if stripe_activo %}
-    <form method="post" action="/pedido/{{ o['id'] }}/pagar">
-      <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
-      <button type="submit">Pagar {{ '%.2f'|format(o['total']) }} € con tarjeta</button>
-    </form>
-    {% elif demo_activo %}
-    <a class="btn" href="/pedido/{{ o['id'] }}/pagar">Pagar {{ '%.2f'|format(o['total']) }} €</a>
-    {% else %}
-    <p>El pago online no esta disponible en este momento.</p>
-    {% endif %}
-  {% endif %}
 </div>
 <p><a href="/pedidos">← Mis pedidos</a></p>
 {% endblock %}

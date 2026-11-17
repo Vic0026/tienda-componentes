@@ -1,0 +1,4 @@
+__pycache__/
+*.pyc
+tienda.db
+.venv/

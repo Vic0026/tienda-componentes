@@ -1,0 +1,20 @@
+[
+ {
+  "id": 1,
+  "usuario": "admin",
+  "email": "admin@pcforge.test",
+  "rol": "admin"
+ },
+ {
+  "id": 2,
+  "usuario": "ana",
+  "email": "ana@pcforge.test",
+  "rol": "cliente"
+ },
+ {
+  "id": 3,
+  "usuario": "luis",
+  "email": "luis@pcforge.test",
+  "rol": "cliente"
+ }
+]

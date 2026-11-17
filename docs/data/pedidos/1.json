@@ -1,0 +1,10 @@
+{
+ "id": 1,
+ "usuario": "ana",
+ "email": "ana@pcforge.test",
+ "producto": "Ryzen 7 7700X",
+ "cantidad": 1,
+ "total": 299.9,
+ "direccion": "C/ Ficticia 12, 3B, 46001 Valencia",
+ "telefono": "600111222"
+}

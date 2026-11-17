@@ -1,116 +1,60 @@
+# PCForge · tienda ficticia de componentes de PC
 
-# PCForge · tienda de componentes de PC
+> ⚠️ **Aplicación deliberadamente vulnerable.** Creada para practicas de auditoria web
+> (CE Ciberseguridad). Ejecutar **solo en local (127.0.0.1) o en la VLAN del aula**.
+> **No desplegar en Internet.** Todos los datos son ficticios.
 
-Tienda web de ejemplo para vender componentes de ordenador (procesadores, gráficas, RAM, SSD, placas base, fuentes y cajas). Está hecha con **Python + Flask + SQLite** y pensada con la seguridad en mente: consultas parametrizadas, protección CSRF, sesiones seguras, cabeceras de seguridad y pago con Stripe o con una pasarela simulada para pruebas.
+## Version y alcance (para el auditor)
 
-> Proyecto educativo. Los productos, usuarios, correos y direcciones son ficticios. No uses tarjetas reales en la pasarela simulada.
+| | |
+|---|---|
+| Version | `1.0.0-vulnerable` |
+| Tecnologia | Python 3 + Flask + SQLite |
+| URL base | `http://127.0.0.1:5000` |
+| En alcance | Todas las rutas de la aplicacion |
+| Fuera de alcance | El sistema operativo, otros servicios y cualquier otra maquina |
 
----
+## Arranque
 
-## Qué incluye
-
-- Catálogo por categorías, buscador y ficha de producto con imagen y opiniones.
-- Registro e inicio de sesión de usuarios.
-- Compra con dirección y teléfono, y listado de pedidos.
-- **Pago**: Stripe Checkout o pasarela simulada (pruebas).
-- **Correo**: recibo del pedido y confirmación del formulario de contacto.
-- Panel de administración (usuarios, ventas y mensajes de contacto).
-- Páginas legales (aviso legal, privacidad y cookies) y formulario de contacto.
-
-## Estructura del repositorio
-
-```
-.
-├── app.py                 # Aplicación Flask (rutas, pagos, correo, seguridad)
-├── requirements.txt       # Dependencias de Python
-├── .env.example           # Plantilla de configuración (copiar a .env)
-├── .gitignore             # Evita subir .env, tienda.db y .venv
-├── templates/             # Páginas HTML (Jinja)
-└── static/
-    ├── style.css          # Estilos
-    └── img/               # Una imagen SVG por producto
-```
-
-La base de datos `tienda.db` **se crea sola** la primera vez que arrancas la app y no forma parte del repositorio.
-
----
-
-## Puesta en marcha
-
-Necesitas **Python 3.10 o superior**.
-
-### 1. Crear el entorno virtual (solo la primera vez)
-
-Windows:
 ```bash
 python -m venv .venv
-.venv\Scripts\activate
-```
-Mac / Linux:
-```bash
-python3 -m venv .venv
-source .venv/bin/activate
-```
-
-### 2. Instalar las dependencias (solo la primera vez)
-
-```bash
+source .venv/bin/activate        # En Windows: .venv\Scripts\activate
 pip install -r requirements.txt
-```
-
-### 3. Configurar el archivo `.env`
-
-```bash
-cp .env.example .env        # En Windows: copy .env.example .env
-```
-
-Para probar en local no hace falta cambiar nada, pero conviene definir un `SECRET_KEY` fijo (si no, las sesiones se cierran cada vez que reinicias la app).
-
-### 4. Arrancar la web
-
-```bash
 python app.py
 ```
 
-Abre <http://127.0.0.1:5000>. La terminal debe quedarse abierta mientras uses la web; para pararla, pulsa `Ctrl+C`.
+Abre <http://127.0.0.1:5000>. La base de datos `tienda.db` se crea sola al primer arranque;
+para volver al estado inicial, borra `tienda.db` y reinicia.
 
-En el primer arranque, la consola muestra la contraseña del usuario `admin` (si no definiste `ADMIN_PASSWORD`). Guárdala: solo se muestra una vez. Para tener clientes de prueba, regístrate desde la web o arranca con `SEED_DEMO_USERS=1`.
+## Cuentas ficticias
 
----
-
-## Configuración (`.env`)
-
-| Variable | Para qué sirve | Valor por defecto |
+| Usuario | Contrasena | Rol |
 |---|---|---|
-| `SECRET_KEY` | Firma las sesiones. Usa una cadena larga y aleatoria | aleatoria en cada arranque |
-| `HTTPS_ENABLED` | `1` cuando la web se sirve por HTTPS (activa la cookie `Secure`) | `0` |
-| `BEHIND_PROXY` | `1` si la web va detrás de un proxy de hosting (usa la IP real del cliente) | `0` |
-| `ADMIN_PASSWORD` | Contraseña inicial del admin | se genera y se muestra en consola |
-| `SEED_DEMO_USERS` | `1` crea los usuarios de prueba `ana` y `luis` con contraseña aleatoria | `0` |
-| `DEMO_PAYMENTS` | `1` activa la pasarela simulada (poner `0` en producción) | `1` |
-| `STRIPE_SECRET_KEY` | Clave secreta de Stripe | vacío |
-| `STRIPE_WEBHOOK_SECRET` | Secreto del webhook de Stripe | vacío |
-| `SMTP_HOST`, `SMTP_PORT` | Servidor de correo saliente | vacío, `587` |
-| `SMTP_USER`, `SMTP_PASSWORD` | Cuenta que envía los correos | vacío |
-| `CONTACT_RECEIVER` | Correo que recibe los mensajes de contacto | `ventas@pcforge.es` |
+| `ana` | `ana123` | cliente |
+| `luis` | `luis123` | cliente |
 
-> El archivo `.env` contiene secretos y **no debe subirse al repositorio**. El `.gitignore` ya lo excluye.
+Tambien existe una cuenta de administracion; forma parte del reto conseguir acceso a ella.
 
----
+## Funcionalidades
 
-## Pago
+Catalogo por categorias, busqueda, ficha de producto con opiniones, registro y login,
+compra con direccion y telefono, listado y detalle de pedidos y panel de administracion.
 
-### Pasarela simulada (por defecto)
+## Reglas para quien audita
 
-Con `DEMO_PAYMENTS=1` y sin claves de Stripe, al comprar aparece un formulario de tarjeta en modo pruebas:
+- Documenta cada hallazgo con peticion, respuesta, efecto e impacto.
+- Propon una correccion y una prueba de cierre por hallazgo.
+- No ataques nada fuera del alcance indicado.
 
-| Tarjeta de prueba | Resultado |
-|---|---|
-| `4242 4242 4242 4242` | Pago aprobado |
-| `4000 0000 0000 0002` | Pago rechazado |
+## Version estatica para GitHub Pages (`docs/`)
 
-Usa cualquier fecha futura y cualquier CVV de 3 cifras. La aplicación no guarda el número completo ni el CVV, solo la marca y los 4 últimos dígitos.
+La carpeta `docs/` contiene una version **solo HTML/CSS/JS** de la tienda, pensada para
+publicarse en GitHub Pages (`https://vic0026.github.io/tienda-componentes/`).
+No tiene servidor ni base de datos, asi que los fallos son de **cliente**:
+XSS en el DOM, autenticacion y control de acceso en el navegador, ficheros de datos
+publicos y archivos olvidados. Todo el contenido es ficticio.
 
+<<<<<<< HEAD
 ### Stripe Checkout
 
 1. Crea una cuenta en <https://stripe.com> y trabaja primero en modo pruebas.
@@ -201,3 +145,7 @@ Antes de publicar en cualquier servicio, deja `SEED_DEMO_USERS=0`, usa siempre H
 | El pedido sigue "pendiente" con Stripe | Falta el webhook o `STRIPE_WEBHOOK_SECRET` |
 | Error 403 al enviar un formulario | La sesión caducó: recarga la página e inténtalo de nuevo |
 >>>>>>> a85c18a (Despliegue en Render)
+=======
+Para activarla: **Settings → Pages → Deploy from a branch → `main` / `/docs`**.
+Para probarla en local: `cd docs && python -m http.server 8000` y abrir <http://127.0.0.1:8000>.
+>>>>>>> 3a2ada6 (Actualización del proyecto)

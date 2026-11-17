@@ -1,0 +1,7 @@
+<!doctype html><html lang="es"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>{% block titulo %}PCForge{% endblock %} · PCForge</title><link rel="stylesheet" href="/static/style.css"></head><body>
+<div class="announcement">PCFORGE LAB <span>·</span> HARDWARE PARA CONSTRUIR ALGO EXTRAORDINARIO</div>
+<header class="top"><a class="logo" href="/"><i>P</i> PC<b>FORGE</b></a>
+<form action="/buscar" method="get" class="search"><input type="search" name="q" placeholder="Buscar procesadores, gráficas, memoria..." aria-label="Buscar"><button>⌕</button></form>
+<nav class="cuenta"><a href="/">Tienda</a>{% if usuario %}<a href="/pedidos">Mis pedidos</a>{% if usuario['rol']=='admin' %}<a href="/admin">Panel admin</a>{% endif %}<span>Hola, {{ usuario['username'] }}</span><a class="pill" href="/logout">Salir</a>{% else %}<a href="/login">Entrar</a><a class="pill" href="/registro">Crear cuenta</a>{% endif %}</nav></header>
+<main>{% block contenido %}{% endblock %}</main>
+<footer><div><a class="logo" href="/">PC<b>FORGE</b></a><p>Componentes, rendimiento y tecnología.</p></div><div><b>Explora</b><a href="/">Catálogo</a><a href="/pedidos">Mis pedidos</a></div><div><b>Ayuda</b><a href="mailto:soporte@pcforge.test">Contacto</a><a href="#">Envíos y devoluciones</a></div><small>Entorno de laboratorio · Datos ficticios<br>PCForge Security Training</small></footer></body></html>

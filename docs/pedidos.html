@@ -1,0 +1,33 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Mis pedidos · PCForge</title>
+<link rel="stylesheet" href="style.css">
+<script src="js/app.js"></script>
+</head>
+<body>
+<div id="cab"></div>
+<main>
+<h1>Mis pedidos</h1>
+<div id="cont"></div>
+<script>
+var s = sesion();
+if (!s) { location.href = "login.html"; }
+else {
+  var ids = { ana: [1, 2], luis: [3] }[s.usuario] || [];
+  var locales = JSON.parse(localStorage.getItem("pedidos_locales") || "[]").filter(function (o) { return o.usuario === s.usuario; });
+  Promise.all(ids.map(function (i) { return fetch("data/pedidos/" + i + ".json").then(function (r) { return r.json(); }); })).then(function (lista) {
+    lista = lista.concat(locales);
+    document.getElementById("cont").innerHTML = lista.length
+      ? '<div class="tabla"><table><tr><th>Pedido</th><th>Componente</th><th>Cantidad</th><th>Total</th></tr>' +
+        lista.map(function (o) { return '<tr><td><a href="pedido.html?id=' + o.id + '">#' + o.id + '</a></td><td>' + o.producto + '</td><td>' + o.cantidad + '</td><td>' + eur(o.total) + '</td></tr>'; }).join("") + '</table></div>'
+      : '<p>Aun no has hecho ningun pedido. <a href="index.html">Ver el catalogo</a>.</p>';
+  });
+}
+</script>
+</main>
+<footer>PCForge · Maqueta estatica de practicas de auditoria web.</footer>
+</body>
+</html>
