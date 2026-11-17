@@ -1,0 +1,12 @@
+version: '3.8'
+services:
+  web:
+    build: .
+    container_name: tienda_componentes_web
+    ports:
+      - "127.0.0.1:8000:8000"
+    volumes:
+      - .:/app
+    environment:
+      - SESSION_SECRET=${SESSION_SECRET}
+    restart: unless-stopped
