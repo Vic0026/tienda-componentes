@@ -261,8 +261,10 @@ def admin():
         "ORDER BY pe.id DESC").fetchall()
     return render_template("admin.html", usuarios=usuarios, ventas=ventas)
 
+@app.route('/health')
+def health_check():
+    return {"status": "healthy"}, 200
 
-if __name__ == "__main__":
-    init_db()
-    # Solo escucha en local. Sin debug (la consola de Werkzeug permite ejecutar codigo).
-    app.run(host="127.0.0.1", port=5000, debug=False)
+if __name__ == '__main__':
+    app.run(host='0.0.0.0', port=8000)
+
